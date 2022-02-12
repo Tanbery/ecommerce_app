@@ -1,14 +1,11 @@
 const router= require("express").Router();
 const User= require("../models/User");
-const {hideIt, showIt} = require("../utils/crypto")
-const jwt = require("jsonwebtoken");
-const { decrypt } = require("../utils/crypto");
-
-
+const {hideIt, showIt} = require("../utils/crypto");
+const {createToken } = require("./token");
 
 //Register
 router.post("/register", async (req,res) =>{
-    console.log("Register In")
+    // console.log("Register In")
     const newUser= new User(
         {
             username: req.body.username,
@@ -17,36 +14,31 @@ router.post("/register", async (req,res) =>{
         }
         );
         try {
-            // console.log(newUser)
             const savedUser=await newUser.save()
-            // console.log(savedUser)
             res.status(201).send(savedUser);
         } catch (error) {
             res.status(500).json(error);
         }
-        console.log("Register Out")
+        // console.log("Register Out")
 })
 
-//Login
+
 router.post("/login", async (req,res) =>{
     console.log("Login In")
     try {
         // is user exist?
         const user =await User.findOne({username: req.body.username});
-        !user && res.status(401).json("Wrong credentials!");
-        
-        //is password correct?
+        if(!user){
+            res.status(401).json("Wrong credentials!"); 
+            return;
+        } 
         const pass = showIt(user.password);
-        pass!== req.body.password &&  res.status(401).json("Wrong credentials!");
+        if (pass!== req.body.password )  {
+            res.status(401).json("Wrong credentials!"); 
+            return;
+        }
         
-        const accessToken = jwt.sign({
-            id: user._id,
-            isAdmin: user.isAdmin
-        }, 
-        process.env.JWT_SEC,
-        {expiresIn:"3d"}
-        );
-        
+        accessToken = createToken({ id: user._id, isAdmin: user.isAdmin});  //console.log(accessToken);
         const {password, ...others} = user._doc;
         res.status(200).json({...others,accessToken})
     } catch (error) {
