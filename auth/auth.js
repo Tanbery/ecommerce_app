@@ -1,10 +1,7 @@
 const router= require("express").Router();
-const User= require("../models/User");
-const {hideIt, showIt} = require("../utils/crypto")
 const jwt = require("jsonwebtoken");
-const { decrypt } = require("../utils/crypto");
-
-
+const {hideIt, showIt} = require("../utils/crypto")
+const User= require("../models/User");
 
 //Register
 router.post("/register", async (req,res) =>{
@@ -31,13 +28,19 @@ router.post("/register", async (req,res) =>{
 router.post("/login", async (req,res) =>{
     console.log("Login In")
     try {
-        // is user exist?
         const user =await User.findOne({username: req.body.username});
-        !user && res.status(401).json("Wrong credentials!");
-        
-        //is password correct?
+        if(!user) {
+            console.log("Login Out")
+            res.status(401).json("Wrong credentials!");
+            return ;
+        }
+               
         const pass = showIt(user.password);
-        pass!== req.body.password &&  res.status(401).json("Wrong credentials!");
+        if (pass!== req.body.password )  {
+            console.log("Login Out")
+            res.status(401).json("Wrong credentials!");
+            return ;
+        }
         
         const accessToken = jwt.sign({
             id: user._id,
@@ -48,11 +51,14 @@ router.post("/login", async (req,res) =>{
         );
         
         const {password, ...others} = user._doc;
+        console.log("Login Out")
         res.status(200).json({...others,accessToken})
+        return ;
     } catch (error) {
+        console.log("Login Out")
         res.status(500).json(error);
+        return;
     }
-    console.log("Login Out")
 })
 
 module.exports = router

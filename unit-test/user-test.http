@@ -1,0 +1,52 @@
+
+
+@username = "enver"
+@updatedusername = "enver updated"
+@password = "1234"
+@email = "enver@enver.com"
+### Basic test for server
+GET {{$dotenv BASE_URL}}/api/test
+
+###Register a new user
+POST {{$dotenv BASE_URL}}/api/auth/register HTTP/1.1
+content-type: application/json
+
+{
+    "username": {{username}},
+    "email": {{email}},
+    "password": {{password}}
+}
+
+
+###login
+# @name Login
+POST {{$dotenv BASE_URL}}/api/auth/login HTTP/1.1
+content-type: application/json
+
+{
+    "username": {{username}},
+    "password": {{password}}
+}
+
+###Update User info
+PUT  {{$dotenv BASE_URL}}/api/users/{{Login.response.body._id}} HTTP/1.1
+Authorization: Baerer {{Login.response.body.accessToken}} 
+content-type: application/json
+
+{
+    "username": {{updatedusername}}
+}
+
+###Update User info
+PUT  {{$dotenv BASE_URL}}/api/users/{{Login.response.body._id}} HTTP/1.1
+Authorization:  Baerer {{Login.response.body.accessToken}} 
+content-type: application/json
+
+{
+    "username": {{username}}
+}
+
+### Delete user
+DELETE {{$dotenv BASE_URL}}/api/users/{{Login.response.body._id}} HTTP/1.1
+Authorization: Baerer {{Login.response.body.accessToken}} 
+content-type: application/json
